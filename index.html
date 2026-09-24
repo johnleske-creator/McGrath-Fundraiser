@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Blights Real Estate × McGrath Foundation Lucky Squares</title>
+<style>
+:root{--purple:#812183;--pink:#ef168c;--navy:#07143d}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--navy);overflow:hidden}
+body:before{
+  content:"";position:fixed;inset:-24px;z-index:-2;
+  background:url("TARGET_MOCKUP.png") center center/cover no-repeat;
+  filter:blur(18px) saturate(.9);
+  transform:scale(1.05);
+}
+body:after{
+  content:"";position:fixed;inset:0;z-index:-1;
+  background:rgba(255,255,255,.16);
+}
+#viewport{position:relative;width:100vw!important;height:100vh!important;margin:0;overflow:hidden;background:transparent}
+#stage{
+  position:absolute;left:0;top:0;width:1536px;height:1024px;
+  transform-origin:top left;
+  background:url("TARGET_MOCKUP.png") 0 0/1536px 1024px no-repeat;
+  box-shadow:0 0 55px rgba(83,32,111,.20);
+}
+#grid{
+  position:absolute;left:189px;top:291px;width:689px;height:589px;
+  display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(20,1fr);
+  column-gap:5px;row-gap:5px;
+  background:#fff;
+}
+.sq{
+  border:1px solid #c9d1df;border-radius:5px;background:#fff;color:#07143d;
+  font-size:11px;line-height:1;font-weight:500;display:grid;place-items:center;
+  padding:0;cursor:pointer;position:relative;overflow:hidden;
+}
+.sq:hover:not(:disabled){border:2px solid #ef168c}
+.sq.selected{background:linear-gradient(135deg,#ff7db6,#ef168c);color:#fff;border-color:#ef168c;font-weight:800}
+.sq.sold{background:linear-gradient(135deg,#76217e,#98288f);border-color:#76217e;color:transparent;cursor:not-allowed}
+.ribbon{
+  display:none;
+  position:absolute;
+  left:50%;top:50%;
+  width:15px;height:20px;
+  transform:translate(-50%,-50%);
+  background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2064%22%3E%0A%3Cpath%20d%3D%22M15%2055%0AC19%2045%2027%2036%2033%2027%0AC39%2018%2037%209%2028%208%0AC19%207%2012%2013%2012%2021%0AC12%2030%2021%2036%2028%2041%0AL38%2055%22%0Afill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227.5%22%0Astroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fsvg%3E") center/contain no-repeat;
+}
+.sold .ribbon{display:block}
+.ribbon:before,.ribbon:after,.ribbon i,.ribbon i:after{
+  display:none!important;content:none!important;
+}
+/* live selection panel overlays the mockup's example values */
+#chosen{
+  position:absolute;left:927px;top:289px;width:277px;height:65px;border-radius:8px;
+  background:#ffd1e3;display:grid;place-items:center;font-size:39px;font-weight:900;
+}
+.field{position:absolute;left:927px;width:277px;height:35px;border:1px solid #bdc7d7;border-radius:5px;background:#fff;padding:0 12px;font-size:12px;color:#333}
+#first{top:387px}#last{top:455px}#email{top:531px}#phone{top:605px}
+#hold{
+  position:absolute;left:927px;top:653px;width:277px;height:55px;border:0;border-radius:7px;
+  background:linear-gradient(90deg,#ef168c,#f52b84);color:#fff;font-size:18px;font-weight:800;cursor:pointer;
+}
+#hold:hover{filter:brightness(1.03)}
+/* live totals cover the mockup's zero placeholders only */
+.liveStat{position:absolute;background:#fdfbfe;font-weight:900;text-align:left;display:flex;align-items:center;padding-left:2px}
+#soldCount{left:606px;top:168px;width:57px;height:31px;font-size:23px}
+#pct{left:773px;top:168px;width:65px;height:31px;font-size:23px}
+#raised{left:944px;top:168px;width:93px;height:31px;font-size:23px}
+/* mask the mockup's example selection before drawing the live value */
+.cover138{position:absolute;left:927px;top:289px;width:277px;height:65px;background:#ffd1e3;border-radius:8px}
+
+/* Replace the AI-rendered McGrath mark in the mockup with the user's correct logo. */
+#mcgrathLogoFix{
+  position:absolute;
+  left:495px;top:18px;
+  width:310px;height:112px;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  z-index:3;
+}
+#mcgrathLogoFix img{
+  width:225px;height:auto;
+  margin-left:-35px;
+  image-rendering:auto;
+}
+
+dialog{border:0;border-radius:16px;padding:0;width:min(460px,calc(100% - 24px));box-shadow:0 30px 90px #0008}
+dialog::backdrop{background:#07143d99}
+.modal{padding:22px}.timer{background:#fff0f6;color:#7b207f;border-radius:9px;padding:10px;font-weight:900}
+.actions{display:flex;gap:8px;margin-top:14px}.actions button{flex:1;border:0;border-radius:9px;padding:12px;font-weight:800;cursor:pointer}
+.cancel{background:#edf1f5}.pay{background:#ef168c;color:#fff}.msg{font-size:12px;color:#59647a;margin-top:8px}
+@media(max-width:650px){
+  html,body{background:transparent}
+  /* still preserve the exact desktop composition; user can scroll horizontally on very small phones */
+}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <main id="stage" aria-label="Blights Real Estate McGrath Foundation fundraiser">
+    <div id="mcgrathLogoFix"><img alt="McGrath Foundation" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJkAAABcCAYAAAB9eRe9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAABNCSURBVHhe7Z15eFXVuYffjCQkEEISwkwIBBEIoyjzJDKIAo5YS61itbVSbe3VYqkVh6tW2zrrlVZrb1XEqwUUREAZBUSGIDMSZsIQAoSQkIRM/ePb61nrbE5Gzs6NsN7nOQ97zD5n799e61vfsAgqKysrw2LxkGD3Bosl0FiRWTzHisziOVZkFs+xIrN4jhWZxXOsyCyeY0Vm8RwrMovnWJFZPMeKzOI5VmQWz7Eis3hO0A8yC2PLaVh4FDafht1nID0XjhRAVAj0i4fhTeHqROgV6z7T8v/AD0tkO8/AvWth+XH3Hv+kRMOTqTChNQS5d1pqix+GyPbkwmOb4YMD7j1Vo2cszBkILSPdeyy1QO2K7MQ5WHsC9uZBZiE0DofRzaB9tPtIzeJjcONKOF2ktzUKgxtbwlVx0LGhnN/cEdC2HFiaCW/vgQ2n9DnNImDhEOgSo7dZaoXaEdmW03D3t/DtSfceoWsM3NwKJiVDC6O1mXkAblut12PC4Iku8GAHva0i5h2Gn62FowWyHhcOG0fZFq2W8V5k/z4EP/kGzpa49/jnqVT4Qyf4YD/8+Bu9vWsMzB4IbaPMoyvneCFcuwzWOa1az1hYeTVEhLiPtHiEtyL7333w0zV6vUsMDGsCqY2gXTRsPAWrsmDuYSgo1ccNToBlhnE/sil83B+iQ/W26pBbDEMXa6FNuRye7eo+6tLk9tVwOF+Wlw5z7w0I3onsu2zovkCvP9kFHutsHqHZkwu/3QizM9x74IYW8O8B7q3V52gBpMwTwQFsHy32XCBJzxVbcFO22J17cqGwVLrpCa3hzrbQu7H7LG95fgd8fliWX+oJ3Rv57k+eK98VoHSCJ6Nw75yx967Vy490LF9gAMnRMGsAzHGJqVND+KCv77aa0jQC/qujXv/zTnPvhTNtC1w2D57bDp8fge05IjCcAc8b6XDlIrhuuazXFttzpFdYdhyya/G6Bt6IbM0JbeT3jIU/dXMf4Z9jjoGuOHS26rZcVbivvV7+5KC558J4ais8sRWMHp9esTAoQcyCUKN5mHcEhi+BM06Legngjcg+Nh7gQ5eZe8onrxh+v8l3W04xvL7Ld9uF0KSeuD4Asotg0VH3EdXn0wz44xa9PigB1l4D60bAsmGQPgaybpCuUrExGx79Tq9f5Hhjk/X7ElafkOXj4yG+nvuI83kjHe5fL8vNIiRMBJAcBbuv8zn0gvjnPrjTGYz4sxPzS2DGfph5EAqdVjS1EdydDN0a+dosxWXQfi7sPyvrE1pJ9x5cjmHz/A74nSOuIODwOOnGs4vgJaf7vred9vmtzIL1J6FnYxgQL9vOlsD03fDVMThTJG6dlvVhYALc1tq5EPDiTvEtzskQUQP8NAmSnNF578Ywpjm0nwe7c2Vb2QRZfmEH7MiBhmHQoQFMTtHn1QBvRJY4W5ytTerBsfHuvf7p+LmEjUAe1OObYZfz47eOFvssEOzJhXbzZHlcC5ht2IEzD4jQy7OZhjSBTwdCA2eU+8khuHmlLLeKlJchrJLO4drlMP+ILL/QTezEvXligAPMGwQJ9cTto+7HM13h0cvhiyNwxxpxy/hjcIKcHxUKrT+Fg86o0R/3tYc3evmK7KlUue9mtw/ye2cNkHhwDajkjtQQNYKLrKIvalO2vqHNIuBHrWG8062BePADRXK0doWom4vh+FUCiwwRu6pZhD5maSaMX6HXFxrd7R1tKxcYwAMpenmuM+oz3/P1J2HIYn0/1P51J2HsCi2w7o3gVylyr+LDZduy4/CbNH1eVTCv/ZgjsOYR0morzhTDXWukla8BVbgrNUAZ60pslWE+rJtayb8dGuht+50hdqBIcLrvLOeB5RbDfev0/gmtIPtGsasOj4MVV2uxLc7UrpZtp/U5I5vq5YoY1Uy6pbIJ2i8VZHSvT2+T+9emPjzXVVraiUkwZRMUOYL4qB+kjYRXekqrnzEOLnPu19/2SDd5YKxcw7QFlwzV136jl2wz+7GkKNgwQv7expGwbbT+3QfzYUHNbFhvRNbYebNOnIOCKqhfOQNBN8lKCDhvUiCJc76fCje9vx9OObHRK2JhRj8IN27NgHh48wq9/u5e+TfP+F5xLrszs1DcGu7Pk1vleu6RtOJcKYxvAbvGwO8uly69eaS0OIMTZN8tzouoCA+GsS30+tpywnf+MM3H13pCDyM96vKG8PtOen2TY9tVE29E1qa+Xs6owC5QmM1wqfNqpRtdWVOjywoEqqWNCZN/Fzg2EsiD9We3j20BT6fC453FNsNlDri7kswCcWu4P49vgYnfQJvPtG1mdllhQfDOlb5db2gQfDVUWr5ZLl/iyXNi3M8xHNmnyrEpK2OQ87tMzOSF8l6MSvBGZD0Nr/bKLHOPf9oZP+TprWLgvvq93tbPGVkFCnWzEh3xqhYNIMXopk2CgKmdYFoX+LUToG9hvEwHnRFmVSkshamOy8bsspKjIdZpad2cdJy6t62SgULQTIibBeO/9jUp/L0k5WFeu7KwnWoAqok3IhtqvBEfViEH7LY2EOF8lbRsGL1cuwVSY2B4zUY15aKMe9Ulm61GcTVupPlyrHAlUnaJ0faP+uy73veYbTnykE2XR0tDuCZfHIEO82T0O/OgjEjDg6UrfzpVoip1FG9ENqqZXp5/pPLmu2Uk/P1K91ZoGAozAhRWUnxvjNpUN6z8UjhhmPJ4ZpvYVX9xfFrjDDvovX06jFQe6xxbSV23sBSKS31bCH8epd25cN0KeTmiQ+Gv3cUwz7tZBiVTO0G00/XXQbwRWVw43JEEE9vAwsHlN/8mP24Du8dIhsSopvBwR9h+LXQOcJLh4mN6WQWrzZb3zXIiDGmnYOpmsas+deyfPnHaSZlZCJPW+HY/JmdLYIrjiO0b595bMSuzoMT5wz9Lht9cJi4GM1y103g5zO9gDmCq00oHEG9EBvDPq+BffeCaKg7tceyRZ7vC/MHwfDffFiZQfGWIbKjTDd/eRtsjq05IkNsktxgmO9EIEN+U4i1j1PnBARi5VJI0FfklYjJ0/0IGM9ckyu9UmO6L8jAHPpuyz7eNlmbKiFWhBIkTMVHMP1L+S+Ah3omsrqIcuw1C4UqnJYsOhZd66GMe3QQDv4KH0sTznvSZiA9ntDUpWR87oqmEpxSLjkHqF9BnEfT/EmI+gR+tluhFZAj8pYfvg/bXPbrpEycp5zh+ukGLtUvk5+tg2BJfIU7dJKNYkPR29ZT/uhOCZ8qA4f8CmCBQCZeWyGZnQJZjH45wtbB3J8PrvaCec0u+zoIXv4f39uuBQo9GsGCwbxcEEv+cM0A85Yo1J0WYyoEaEyY1Bqk16P4bholtqgZHK7O0S2T6bnGYLhiic8X25MFWpzXt2kjyyNTvUlRB24HCm9hlXWXoEt2SfTHYv5c+PRde/h42nJS6zvh60uLd2EqcoBX1biVl4hX/NEMyfvfmid03KAF+mSKxXJBjVjuuncc6Q06RXBPHZLgjSf9Nk6xC+PseiTRkFkrSZWqMDEDi60FRKbyeLnljnWLgVsNpm5EvI+C9eRL4v7W1xINf/l4PzKYZLbIiPVcGNRhB9Wpy6Yhsew50mi/L7aLFo16RYCwB49LpLn+7US/f394KrBa5NEQ2J0OHcBLrif1lqTUufpHll8CvDPfDq73EkLbUGhe/yMKC4RftZXR1XfPzMxgCyWu7JBdsyGIx/L0ipwj+uFncK2lGlXwdxRvDf5qR814VplzufbHtdied2KxQDzS/TtOjxNkDfMNO1eWhND3Nwof9fP1gD2/U1VZx4VJDUIfxRmRBM91bKubkDVULPdV1AimyYUtgieNu2XOdb+W8KbIGoXD6pjo9kLn4u8uLkamdJTOlZaTMVlSHBYbnLVmjsPOT7PwxIME32PtDpbZash8Y3oosPhyOV9NeKCqFjw/JhCtnnJToRuGSfTCmue9be6RAZx8kR0NrP7lY607qWoOBCbKsjOX+8TIw2HJarpd2StKoezeG+1P8C/9QPszNkBTnrEJJ0Lw6UfK6TJF9NlAGGoqsQkk4XJklHve4etISjWsBw4x8ORWReChNcutAQkrKJmsXLbal+g1NI86fbmFfnoSbzMFH33gZAJlZyziF2Pkl8ndb1ZdU9/f3SVFKXrEkcU5OuSCR1y2RLTgqVTGq5tJN+2gpnFApOtN3S4AYo2zMTfcFMi8HSHHIpmwJMAOsGg5PbPFfING7saQ71zcGJH/bDfet981yUExOkRfgVSdVyBTZu3sl2bC8aviJbSRrJShIAtgV8VxX6J8gAXycc//VR5bzSyRb5B97/ccmg5y6zld66vhru7kS63y4oyRxTtty/vdsEAqf9K9eRo1B3bHJFh+D0cu0wMKCJC7XsQGEOC1Keq64B3YZiYfVxUytuXWlCCw0SILfqgAGpxjDHCUvPy6CVgILC5KAdLtoeXiv7RIRKtRDnnUI7vpWP7hgJ9BuXuu9/fCnHXq9JpQBt66CdwyBxYdL3FVlAJcBb+0W14dC3Y8P98Mj38n3bBXpG8g/UwyTjN9QTeqGyErL4O61+uZc1VhK0TaNksTF/dfr4t6zJTB5g3l29TBzsQ7lw6S20tpuGCmugGeMKaWmO6IpKpWqc3Vq/3g4Ol7K0tLHwNoREBvmO/0VzkN90PiuL3SDnJvkWidugEVDRKwAf94hYl0yVD49jLrHGX319tvb6O0mnxzUdZwhQTD9Cvlda66BzPGyrp72RwfhSyevTt2Pg/nywmwYIeV0m0bJR3XTh/IlBbwGeCuyrHPSdVb0eWu31F3ucwohEuvBoqG+Uxu0iJQHoqqDFh7VNQDVxTSzWkZKqZvK1QpCulw15efpIikQ+fiQnl6paYRkcJgtUa9Y8WW5ST+jq7h7xkq1eJRRrDE8UfK9cIpEjhVIJdSQJmKHKq6K09tb+bE7Af7HaEX/0AnuaWfulfUphjmhXiDzfrzqKolLjfE9Z7ORjFkNvBVZVTGzVSd30NMAmDSP9E2BWWKcU1P6xp+fG4ZTb6g4WgDLjQr2+1P8V/WMaHp+rlhKA11Esn6E776jBVK1bhrnZv1pdThXCsuM7/iIH9sUYIpRQ2mmoStUqZ+JOag4UrPv5+cOB5D6IVKnWNHnisaSG6UwK8fdmA+/pi2Z2aOZRr2J+XaXGdVNuCqU3JiTHru75Rd3wg1fQ5PZ0oI3myPTIqgkSlz2YnXILtL5+63rl/+7GoTqiMeJc2IGmAMEd2JjgPDmryrqh0giXEWfXrG+rYm/kZs/iiqpDAok5s3318oq1AAFdJnb23tk5p+HnJkk1VwWEcEyjdX4C/ClKWpy/zCKnD3GW5FVFZ+StAr6fZVSDOfbJuU1AucMMZZ3TGWYcUNzkhY321zldEsyZfbtwlJJkX67t0wjWjoB8m8Rt0CTAFTHNwrTrVdGfvnTOuQU6Yr+6FBdQe8xdUNkZkna23t8haHILvItFB6e6Juyoxy3JnnFvnWWNe2O+ifoZX/z2uI4fc3/NwCX3fj7TlKA0rGhr9h9StmMVsgs+K1K62Tew7fSzT2aN4zt7hoHD6kbIhvcRM9Kc7gAHtjgaysUlIgLQb2h1ySKbWQapfOP+D6M0jKZCacqD6gyrm2mJ2lZmgkzXFXxxwt958hVNDNa6PV+UnJmHPD9L3zM72q21Gpi4Yq41xhN/vc2XUisWJUFz27T6z93jT49pG6ILAg9lRGOw7DXAvEx/WKdeO3VhCKRIVJ9A9C5oQ6TpGXDYKdU7JfrocPn4iA17ZUaNmSEB0sdqOL21TDoK0npnvQt9Fgg11ezISqGJ+rQ1Lt74foV0hq/v18corev9rX3pm7W/itVrgfwYJpMEjhk8fldsmJsC3kZcFr9wYvhlpXiYL3xazk3x3lJb2p5CbZkIPG7eYO0zyotG17ZJYJTE8K1jITlw7RjNiwY3r5SP0hVKvZmuthOLSN9ayIvpFGblOw79/+KLKlj/MdesXOuToTpvc0zxIXx5hV6QDD3sNRgTvxGvPxRIbBkmLb5Fh6FL50Q173toJ9Rab7zjMQTc/yYBYqP+ukKpbMl4t97YQfMytClefckw/sBnvqhEkKmTZs2zb3xglmaKeX7lzX0nce0MlIawF1tRQzhweIMjQkTm2hiG7k57kBtcrS8mXvzpFs9Vyoj1gmtJabXMEycoklR8JMkyC+WBMakKOgTLxkgbrbniH2UFCV/WzmGByRI115QIsb82WJxsj7QAV7uITlxXx+X88a2kC6vZ6wINCxIvtupcxKOurY5vHOVOD/vaSdzYoQFy/RNvRqLTXZXW/kbCfUkoN6qvpTmhQdLWVxSlPj6Bjq/ITxYMn87xcj1ghxjv4szac1z3WSiaDPwv+aEmAJJUXBn8vmtffY5sWuTomR2pb7Vn2HJmwC5xWJQd7pLy0WLFZnFc6zILJ5jRWbxHCsyi+dYkVk8x4rM4jlWZBbPsSKzeI4VmcVzrMgsnmNFZvEcKzKL51iRWTzHisziOVZkFs+xIrN4jhWZxXOsyCyeY0Vm8RwrMovnWJFZPMeKzOI5VmQWz7Eis3iOFZnFc6zILJ5jRWbxHCsyi+f8B1Zed9rw+PZFAAAAAElFTkSuQmCC"></div>
+    <div id="grid" aria-label="Lucky square numbers"></div>
+
+    <div class="cover138"></div>
+    <div id="chosen">—</div>
+
+    <input class="field" id="first" autocomplete="given-name" placeholder="Enter your first name">
+    <input class="field" id="last" autocomplete="family-name" placeholder="Enter your last name">
+    <input class="field" id="email" type="email" autocomplete="email" placeholder="Enter your email address">
+    <input class="field" id="phone" type="tel" autocomplete="tel" placeholder="Enter your phone number">
+    <button id="hold">Hold Square&nbsp; ❯</button>
+
+    <div id="soldCount" class="liveStat">0</div>
+    <div id="pct" class="liveStat">0%</div>
+    <div id="raised" class="liveStat">$0</div>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <div class="modal">
+    <h2>Square <span id="dsq"></span> is held for you</h2>
+    <div class="timer">Time remaining: <span id="tm">10:00</span></div>
+    <p style="font-size:13px">Continue to Square to complete your $20 payment.</p>
+    <div class="actions">
+      <button id="cancel" class="cancel">Cancel</button>
+      <button id="pay" class="pay">Continue to Square</button>
+    </div>
+    <div id="dmsg" class="msg"></div>
+  </div>
+</dialog>
+
+<script>
+const CONFIG={
+  apiEndpoint:"https://script.google.com/macros/s/AKfycbzSByzkPZXsb6MZH6VemZDC6l7WmcT7qR0KWbNnRWiSbRABAVJlQeyQSa8oMrZJX8qEoA/exec",
+  totalSquares:300,
+  price:20,
+  holdMinutes:10,
+  demoSold:[5,24,38,71,88,121,178,200,204,251,295]
+};
+
+const BASE_W=1536, BASE_H=1024;
+const viewport=document.getElementById("viewport");
+const stage=document.getElementById("stage");
+
+function fitStage(){
+  const w=window.innerWidth, h=window.innerHeight;
+  // Fill the browser as much as possible while preserving the exact 1536×1024 layout.
+  const scale=Math.min(w/BASE_W,h/BASE_H);
+  const scaledW=BASE_W*scale, scaledH=BASE_H*scale;
+  const left=Math.max(0,(w-scaledW)/2);
+  const top=Math.max(0,(h-scaledH)/2);
+  stage.style.left=left+"px";
+  stage.style.top=top+"px";
+  stage.style.transform=`scale(${scale})`;
+}
+window.addEventListener("resize",fitStage);
+fitStage();
+
+let state={},selected=null,token=null,expires=0,clock=null;
+let clientId=localStorage.getItem("bmClient") ||
+  (crypto.randomUUID ? crypto.randomUUID() : "c"+Date.now());
+localStorage.setItem("bmClient",clientId);
+
+const grid=document.getElementById("grid");
+const dlg=document.getElementById("dlg");
+const chosen=document.getElementById("chosen");
+const first=document.getElementById("first");
+const last=document.getElementById("last");
+const email=document.getElementById("email");
+const phone=document.getElementById("phone");
+const hold=document.getElementById("hold");
+const soldCount=document.getElementById("soldCount");
+const pct=document.getElementById("pct");
+const raised=document.getElementById("raised");
+const dsq=document.getElementById("dsq");
+const tm=document.getElementById("tm");
+const pay=document.getElementById("pay");
+const cancel=document.getElementById("cancel");
+const dmsg=document.getElementById("dmsg");
+
+async function api(action,payload={}){
+  if(!CONFIG.apiEndpoint) throw Error("Preview mode — backend not connected yet.");
+  const r=await fetch(CONFIG.apiEndpoint,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({action,clientId,...payload})
+  });
+  const d=await r.json();
+  if(!d.ok) throw Error(d.error||"Request failed");
+  return d;
+}
+
+async function load(){
+  if(!CONFIG.apiEndpoint){
+    state={};
+    CONFIG.demoSold.forEach(n=>state[n]={status:"paid"});
+    render();
+    return;
+  }
+  try{
+    const d=await api("list");
+    state=d.squares||{};
+    render();
+  }catch(e){ console.warn(e); }
+}
+
+function render(){
+  grid.innerHTML="";
+  let count=0;
+  for(let n=1;n<=300;n++){
+    const st=state[n];
+    if(st?.status==="paid") count++;
+    const b=document.createElement("button");
+    b.className="sq";
+    b.type="button";
+    b.setAttribute("aria-label","Square "+n);
+    b.innerHTML=`<span>${n}</span><span class="ribbon"><i></i></span>`;
+    if(st?.status==="paid"){
+      b.classList.add("sold"); b.disabled=true;
+    }else if(st?.status==="held"){
+      b.disabled=true; b.style.background="#fff1b9";
+    }else{
+      b.onclick=()=>choose(n);
+    }
+    if(n===selected) b.classList.add("selected");
+    grid.appendChild(b);
+  }
+  soldCount.textContent=count;
+  pct.textContent=Math.round((count/300)*100)+"%";
+  raised.textContent="$"+(count*20).toLocaleString("en-AU");
+}
+
+function choose(n){
+  selected=n;
+  chosen.textContent=n;
+  render();
+}
+
+hold.onclick=async()=>{
+  if(!selected){ alert("Choose an available square first."); return; }
+  if(!first.value.trim()||!last.value.trim()||!email.value.trim()||!phone.value.trim()){
+    alert("Please complete your first name, last name, email address and phone number.");
+    return;
+  }
+  try{
+    if(!CONFIG.apiEndpoint){
+      token="preview";
+      expires=Date.now()+600000;
+    }else{
+      const d=await api("hold",{square:selected});
+      token=d.holdToken;
+      expires=d.holdExpiresAt;
+    }
+    dsq.textContent="#"+selected;
+    dlg.showModal();
+    startClock();
+    await load();
+  }catch(e){ alert(e.message); }
+};
+
+function startClock(){
+  clearInterval(clock);
+  tick();
+  clock=setInterval(tick,1000);
+}
+function tick(){
+  const left=Math.max(0,expires-Date.now());
+  const sec=Math.ceil(left/1000);
+  tm.textContent=Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");
+  if(!left){
+    clearInterval(clock);
+    pay.disabled=true;
+    dmsg.textContent="Hold expired. Please choose the square again.";
+  }
+}
+
+pay.onclick=async()=>{
+  if(!CONFIG.apiEndpoint){
+    dmsg.textContent="Preview mode — Square is not connected yet.";
+    return;
+  }
+  pay.disabled=true;
+  try{
+    const d=await api("createCheckout",{
+      square:selected,holdToken:token,
+      firstName:first.value.trim(),lastName:last.value.trim(),
+      email:email.value.trim(),phone:phone.value.trim()
+    });
+    location.href=d.paymentLink;
+  }catch(e){
+    dmsg.textContent=e.message;
+    pay.disabled=false;
+  }
+};
+
+cancel.onclick=async()=>{
+  clearInterval(clock);
+  if(CONFIG.apiEndpoint&&selected&&token){
+    try{await api("release",{square:selected,holdToken:token})}catch(e){}
+  }
+  dlg.close();
+  token=null;
+  await load();
+};
+
+load();
+if(CONFIG.apiEndpoint) setInterval(load,15000);
+</script>
+</body>
+</html>
