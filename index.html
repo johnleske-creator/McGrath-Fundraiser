@@ -193,17 +193,24 @@ async function api(action,payload={}){
 }
 
 async function load(){
+  // Draw the grid first so an Apps Script problem can never make it disappear.
+  render();
+
   if(!CONFIG.apiEndpoint){
     state={};
     CONFIG.demoSold.forEach(n=>state[n]={status:"paid"});
     render();
     return;
   }
+
   try{
     const d=await api("list");
     state=d.squares||{};
     render();
-  }catch(e){ console.warn(e); }
+  }catch(e){
+    console.warn("Backend list failed:",e);
+    // Keep the grid visible and usable while reporting the API error in console.
+  }
 }
 
 function render(){
