@@ -249,7 +249,13 @@ hold.onclick=async()=>{
       token="preview";
       expires=Date.now()+600000;
     }else{
-      const d=await api("hold",{square:selected});
+      const d=await api("hold",{
+        square:selected,
+        firstName:first.value.trim(),
+        lastName:last.value.trim(),
+        email:email.value.trim(),
+        phone:phone.value.trim()
+      });
       token=d.holdToken;
       expires=d.holdExpiresAt;
     }
